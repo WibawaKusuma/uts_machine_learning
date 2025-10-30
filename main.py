@@ -1,12 +1,19 @@
-from __future__ import annotations
+# Import modul standar Python
+from __future__ import annotations  # Untuk fitur anotasi tipe yang lebih baik
 
+# Import library yang diperlukan
 import os
 import json
-import numpy as np
-import pandas as pd
+import numpy as np  # Untuk komputasi numerik
+import pandas as pd  # Untuk manipulasi data
 from dataclasses import asdict
-from joblib import dump
-from pathlib import Path
+from joblib import dump  # Untuk menyimpan model
+from pathlib import Path  # Untuk menangani path file/direktori
+
+# Konfigurasi matplotlib untuk menggunakan backend 'Agg'
+# Ini mencegah error Tkinter dengan menggunakan backend non-interaktif
+import matplotlib
+matplotlib.use('Agg')  # Backend non-interaktif untuk menghindari error GUI
 
 from src.data import generate_synthetic, split_and_impute
 from src.features import transform_features, FeatureBundle
@@ -20,33 +27,51 @@ from src.importance import save_coeff_importance
 from src.predict import make_new_samples
 
 def log(msg: str):
+    """
+    Fungsi pembantu untuk menampilkan pesan log
+    
+    Parameters:
+        msg (str): Pesan yang akan ditampilkan
+    """
     print(f"[INFO] {msg}")
 
 def ensure_dir(dir_path: str):
-    """Memastikan direktori ada, jika tidak buat"""
+    """
+    Memastikan direktori ada, jika tidak ada maka akan dibuat
+    
+    Parameters:
+        dir_path (str): Path ke direktori yang akan dicek/dibuat
+    """
     Path(dir_path).mkdir(parents=True, exist_ok=True)
 
 def main():
-    # Konfigurasi
-    FIG_DIR = "figures"
-    MODEL_DIR = "models"
-    DEGREES = [1, 2, 3]  # Derajat polinomial yang akan dicoba
+    """
+    Fungsi utama yang menjalankan alur kerja machine learning
+    """
+    # Konfigurasi path dan parameter
+    FIG_DIR = "figures"  # Direktori untuk menyimpan gambar visualisasi
+    MODEL_DIR = "models"  # Direktori untuk menyimpan model
+    DEGREES = [1, 2, 3]  # Derajat polinomial yang akan dicoba untuk model regresi
     
-    # Buat direktori jika belum ada
-    os.makedirs(FIG_DIR, exist_ok=True)
-    os.makedirs(MODEL_DIR, exist_ok=True)
+    # Pastikan direktori yang diperlukan sudah ada
+    ensure_dir(FIG_DIR)    # Buat direktori untuk menyimpan gambar
+    ensure_dir(MODEL_DIR)  # Buat direktori untuk menyimpan model
     
-    # 1. Generate synthetic data
+    # 1. Generate data sintetis untuk pelatihan
     print("[1/6] Membuat dataset sintetis...")
+    # Membuat dataset dengan 400 sampel
     df = generate_synthetic(n_samples=400)
     
-    # 2. EDA & Visualisasi
+    # 2. Eksplorasi Data & Visualisasi Awal
     print("[2/6] Melakukan analisis eksplorasi...")
+    # Simpan histogram untuk melihat distribusi data
     save_histograms(df, "Harga", FIG_DIR)
+    # Buat scatter plot untuk melihat hubungan fitur dengan target
     save_scatter_vs_target(df, "Harga", FIG_DIR)
+    # Buat heatmap korelasi untuk melihat hubungan antar variabel
     save_corr_heatmap(df, FIG_DIR)
     
-    # 3. Split data
+    # 3. Bagi data menjadi training dan testing set
     print("[3/6] Memisahkan data...")
     splits = split_and_impute(df)
     
